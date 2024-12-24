@@ -1,4 +1,4 @@
-package github.rikacelery.mikumusicx.component
+package github.rikacelery.mikumusicx.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import github.rikacelery.mikumusicx.VM
+import github.rikacelery.mikumusicx.component.HueBar
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
