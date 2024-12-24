@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    kotlin("plugin.serialization") version "2.1.0"
 }
 
 val keystoreProperties = Properties()
@@ -82,7 +83,9 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     val ktor_version = "3.0.2"
     implementation("io.ktor:ktor-client-core:$ktor_version")
-    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-okhttp:$ktor_version")
+    implementation("org.jsoup:jsoup:1.18.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0-RC")
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)

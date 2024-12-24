@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,6 +15,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,12 +33,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.palette.graphics.Palette
 import coil3.compose.rememberAsyncImagePainter
 import coil3.toBitmap
 import com.materialkolor.hct.Hct
 import com.materialkolor.ktx.toColor
 import com.materialkolor.ktx.toHct
+import github.rikacelery.mikumusicx.VM
 import okhttp3.internal.toHexString
 
 @Suppress("ktlint:standard:function-naming")
@@ -46,22 +50,35 @@ fun MusicCard(
     artist: String,
     cover: String,
     modifier: Modifier = Modifier,
+    viewModel: VM = viewModel(),
     onClick: () -> Unit = {},
 ) {
+    val state by viewModel.uiState.collectAsState()
+    val dark =
+        when (state.darkMode) {
+            0 -> isSystemInDarkTheme()
+            1 -> false
+            2 -> true
+            else -> error("Invalid dark mode ${state.darkMode}")
+        }
     ElevatedCard(onClick = onClick, modifier = modifier) {
         ConstraintLayout(
-            Modifier.Companion
+            Modifier
                 .fillMaxWidth()
                 .height(100.dp),
         ) {
-            var dominant by remember { mutableStateOf(Color.Companion.White) }
-            var colorLight by remember { mutableStateOf(Color.Companion.Black) }
-            var colorDark by remember { mutableStateOf(Color.Companion.Black) }
+            var dominant by remember { mutableStateOf(if (dark)Color.White else Color.DarkGray) }
+            var colorLight by remember { mutableStateOf(if (dark)Color.DarkGray else Color.White) }
+            var colorDark by remember { mutableStateOf(if (dark)Color.DarkGray else Color.White) }
             val (imgRef, boxRef, infoRef) = createRefs()
             Image(
                 painter =
                     rememberAsyncImagePainter(
                         cover,
+                        imageLoader = viewModel.imageLoader,
+                        onError = {
+                            Log.i("Palette", "Error: ${it.result.throwable}")
+                        },
                         onSuccess = {
                             val bitmap =
                                 it.result.image
@@ -70,7 +87,7 @@ fun MusicCard(
                             val palette = Palette.Builder(bitmap).generate()
 
                             val dominantColor =
-                                Color(palette.getDominantColor(Color.Companion.Red.toArgb()))
+                                Color(palette.getDominantColor(Color.Red.toArgb()))
                             Log.i(
                                 "Palette",
                                 "Color: ${
@@ -79,16 +96,22 @@ fun MusicCard(
                                 }",
                             )
                             val hct = dominantColor.toHct()
-                            dominant = Hct.Companion.from(hct.hue, 20.0, 85.0).toColor()
-                            colorLight = Hct.Companion.from(hct.hue, 30.0, 25.0).toColor()
-                            colorDark = Hct.Companion.from(hct.hue, 30.0, 5.0).toColor()
+                            if (dark) {
+                                dominant = Hct.from(hct.hue, 70.0, 95.0).toColor()
+                                colorLight = Hct.from(hct.hue, 30.0, 25.0).toColor()
+                                colorDark = Hct.from(hct.hue, 30.0, 5.0).toColor()
+                            } else {
+                                dominant = Hct.from(hct.hue, 70.0, 5.0).toColor()
+                                colorLight = Hct.from(hct.hue, 30.0, 95.0).toColor()
+                                colorDark = Hct.from(hct.hue, 30.0, 95.0).toColor()
+                            }
                         },
                     ),
                 contentDescription = null,
-                contentScale = ContentScale.Companion.Crop,
+                contentScale = ContentScale.Crop,
                 modifier =
-                    Modifier.Companion
-                        .aspectRatio(1.3f)
+                    Modifier
+                        .aspectRatio(1.4f)
                         .constrainAs(imgRef) {
                             top.linkTo(parent.top)
                             end.linkTo(parent.end)
@@ -96,25 +119,25 @@ fun MusicCard(
                         },
             )
             Canvas(
-                Modifier.Companion
+                Modifier
                     .constrainAs(boxRef) {
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         end.linkTo(parent.end)
-                        width = Dimension.Companion.fillToConstraints
-                        height = Dimension.Companion.fillToConstraints
-                    }.graphicsLayer(compositingStrategy = CompositingStrategy.Companion.Offscreen)
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                     .drawWithContent {
                         val colors =
                             listOf(
-                                Color.Companion.Black,
-                                Color.Companion.Transparent,
+                                Color.Black,
+                                Color.Transparent,
                             )
                         drawContent()
                         drawRect(
                             brush =
-                                Brush.Companion.linearGradient(
+                                Brush.linearGradient(
                                     colors,
                                     start =
                                         Offset(
@@ -127,12 +150,12 @@ fun MusicCard(
                                             size.width * 0.06f,
                                         ),
                                 ),
-                            blendMode = BlendMode.Companion.DstIn,
+                            blendMode = BlendMode.DstIn,
                         )
                     },
             ) {
                 val brush =
-                    Brush.Companion.verticalGradient(
+                    Brush.verticalGradient(
                         listOf(
                             colorLight,
                             colorDark,
@@ -142,14 +165,14 @@ fun MusicCard(
             }
 
             Column(
-                Modifier.Companion
+                Modifier
                     .constrainAs(infoRef) {
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         end.linkTo(parent.end)
-                        width = Dimension.Companion.fillToConstraints
-                        height = Dimension.Companion.fillToConstraints
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
                     }.padding(20.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -161,7 +184,7 @@ fun MusicCard(
                 Text(
                     artist,
                     color = dominant,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }

@@ -5,11 +5,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import github.rikacelery.mikumusicx.API
 import github.rikacelery.mikumusicx.component.MusicCard
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
+import kotlinx.coroutines.launch
 
 data class Music(
     val name: String,
@@ -189,13 +196,19 @@ val musicData =
 fun MusicListScreen(modifier: Modifier = Modifier) {
     LazyColumn(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         itemsIndexed(musicData) { idx, v ->
+            var url by remember {
+                mutableStateOf("")
+            }
+            LaunchedEffect(Unit) {
+                launch {
+                    url = API.fetchCover(v.id)
+                    println(url)
+                }
+            }
             MusicCard(
                 v.name,
                 v.artist,
-                listOf(
-                    "https://p2.music.126.net/hTfxhtLKQR6ABaIbNcdmmg==/912594651077805.jpg?param=130y130",
-                    "https://p2.music.126.net/67aoYsdXe2oqfwiLZKkGxQ==/109951167853986643.jpg?param=130y130",
-                )[idx % 2],
+                url,
             )
         }
     }

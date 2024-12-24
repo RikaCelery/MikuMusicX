@@ -42,12 +42,12 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         GlobalScope.launch {
             dataModel.load(dataStore)
         }
         enableEdgeToEdge()
 //        enableEdgeToEdge(SystemBarStyle.auto(Color.CYAN, Color.BLACK), SystemBarStyle.dark(TRANSPARENT))
-        super.onCreate(savedInstanceState)
         setContent {
             MikuMusicXTheme {
                 App()
