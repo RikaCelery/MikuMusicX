@@ -21,10 +21,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -66,7 +64,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.navigation.Navigator
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -82,12 +79,10 @@ import kotlinx.coroutines.launch
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun PlayerScreen(onNavigateUp: () -> Unit={}) {
+fun PlayerScreen(onNavigateUp: () -> Unit = {}) {
     Surface {
         Row(
             Modifier
-                .statusBarsPadding()
-                .navigationBarsPadding()
                 .fillMaxSize(),
             Arrangement.Center,
             Alignment.CenterVertically,
