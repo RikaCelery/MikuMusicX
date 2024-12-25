@@ -79,5 +79,6 @@ fun MikuMusicXTheme(
         colorScheme = colorScheme,
         typography = Typography,
         content = content,
+        shapes = Shapes,
     )
 }

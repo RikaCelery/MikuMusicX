@@ -193,7 +193,10 @@ val musicData =
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun MusicListScreen(modifier: Modifier = Modifier) {
+fun MusicListScreen(
+    modifier: Modifier = Modifier,
+    onClick: (Music) -> Unit = {},
+) {
     LazyColumn(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         itemsIndexed(musicData) { idx, v ->
             var url by remember {
@@ -209,6 +212,10 @@ fun MusicListScreen(modifier: Modifier = Modifier) {
                 v.name,
                 v.artist,
                 url,
+//                cacheKey = v.id.toString(),
+                onClick = {
+                    onClick(v)
+                },
             )
         }
     }
