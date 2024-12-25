@@ -13,6 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import github.rikacelery.mikumusicx.API
 import github.rikacelery.mikumusicx.component.MusicCard
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
@@ -194,10 +196,15 @@ val musicData =
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun MusicListScreen(
+    navController: NavController = rememberNavController(),
+    bottomBar: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
     onClick: (Music) -> Unit = {},
 ) {
-    LazyColumn(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyColumn(
+        modifier.padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         itemsIndexed(musicData) { idx, v ->
             var url by remember {
                 mutableStateOf("")

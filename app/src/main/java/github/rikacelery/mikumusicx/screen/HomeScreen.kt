@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.rememberAsyncImagePainter
 import github.rikacelery.mikumusicx.R
 import kotlinx.coroutines.delay
@@ -32,7 +34,10 @@ import kotlinx.coroutines.launch
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    navController: NavController = rememberNavController(),
+    bottomBar: @Composable () -> Unit = {},
+) {
     Column(
         Modifier.Companion
             .verticalScroll(rememberScrollState())

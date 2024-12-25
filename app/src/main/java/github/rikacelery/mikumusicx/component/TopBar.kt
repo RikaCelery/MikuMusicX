@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import github.rikacelery.mikumusicx.App
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 
 @Suppress("ktlint:standard:function-naming")
@@ -33,6 +32,6 @@ fun AppTopBar(onclick: () -> Unit = {}) {
 @Composable
 fun AppTopBarPreview() {
     MikuMusicXTheme {
-        App()
+        AppTopBar()
     }
 }

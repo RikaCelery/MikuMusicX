@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -75,7 +76,7 @@ fun MusicCard(
                 painter =
                     rememberAsyncImagePainter(
                         cover,
-                        imageLoader = viewModel.imageLoader,
+                        imageLoader = viewModel.loader(LocalContext.current),
                         onError = {
                             Log.i("Palette", "Error: ${it.result.throwable}")
                         },

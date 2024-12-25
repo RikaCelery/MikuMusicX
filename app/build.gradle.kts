@@ -79,8 +79,12 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
+    // Dagger - Hilt
     implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
+
     @Suppress("ktlint:standard:property-naming")
     val ktor_version = "3.0.2"
     implementation("io.ktor:ktor-client-core:$ktor_version")
@@ -93,6 +97,13 @@ dependencies {
     val nav_version = "2.8.4"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    implementation(libs.media3.ui)
+
+    // ExoPlayer
+//    api(libs.bundles.exoplayer)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)

@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import github.rikacelery.mikumusicx.VM
 import github.rikacelery.mikumusicx.component.HueBar
@@ -53,7 +55,11 @@ import kotlinx.coroutines.launch
 @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun SettingsScreen(viewModel: VM = viewModel()) {
+fun SettingsScreen(
+    navController: NavController = rememberNavController(),
+    bottomBar: @Composable () -> Unit = {},
+    viewModel: VM = viewModel(),
+) {
     val state by viewModel.uiState.collectAsState()
     rememberColorPickerController()
     val scope = rememberCoroutineScope()
@@ -63,6 +69,7 @@ fun SettingsScreen(viewModel: VM = viewModel()) {
             viewModel.setSeedColor(value)
         }
     }
+
     Column(
         modifier =
             Modifier
