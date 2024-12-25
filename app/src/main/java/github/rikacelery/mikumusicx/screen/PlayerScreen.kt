@@ -68,6 +68,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.palette.graphics.Palette
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
@@ -97,6 +98,7 @@ import java.lang.IllegalStateException
 @Composable
 fun PlayerScreen(
     id: String,
+    vm:VM = viewModel(),
     onNavigateUp: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -141,13 +143,13 @@ fun PlayerScreen(
         for (i in 0..10) {
             try {
                 try {
-                    VM.player.reset()
+                    vm.player.reset()
                 } catch (e: IllegalStateException) {
                     e.printStackTrace()
                 }
                 val fis = FileInputStream(dataSource)
-                VM.player.setDataSource(fis.fd)
-                VM.player.prepare()
+                vm.player.setDataSource(fis.fd)
+                vm.player.prepare()
                 ee = null
                 break
             } catch (e: Exception) {
@@ -162,14 +164,14 @@ fun PlayerScreen(
         }
         musicControllerUiState =
             musicControllerUiState.copy(
-                totalDuration = VM.player.duration.toLong(),
+                totalDuration = vm.player.duration.toLong(),
             )
-        VM.setPlayingSong(Song(id, "", "", "", cover))
+        vm.setPlayingSong(Song(id, "", "", "", cover))
         launch {
             while (true) {
                 musicControllerUiState =
                     musicControllerUiState.copy(
-                        currentPosition = VM.player.currentPosition.toLong(),
+                        currentPosition = vm.player.currentPosition.toLong(),
                     )
                 delay(1000)
             }
@@ -211,19 +213,19 @@ fun PlayerScreen(
                 {
                     when (it) {
                         is SongEvent.PauseSong -> {
-                            VM.player.pause()
+                            vm.player.pause()
                             musicControllerUiState =
                                 musicControllerUiState.copy(playerState = PlayerState.PAUSED)
                         }
 
                         is SongEvent.ResumeSong -> {
-                            VM.player.start()
+                            vm.player.start()
                             musicControllerUiState =
                                 musicControllerUiState.copy(playerState = PlayerState.PLAYING)
                         }
 
                         is SongEvent.SeekSongToPosition -> {
-                            VM.player.seekTo(it.position.toInt())
+                            vm.player.seekTo(it.position.toInt())
                             musicControllerUiState =
                                 musicControllerUiState.copy(currentPosition = it.position)
                         }

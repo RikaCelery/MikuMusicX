@@ -2,6 +2,7 @@ package github.rikacelery.mikumusicx
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.datastore.core.DataStore
@@ -20,9 +21,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toOkioPath
 
-object VM : ViewModel() {
+class VM : ViewModel() {
     private var _loader: ImageLoader? = null
-    val player = MediaPlayer()
+    lateinit var player: MediaPlayer
+
+    init {
+        Log.d("VM","jhkjhakfhj")
+        //print stack
+        val stackTrace = Thread.currentThread().stackTrace
+        for (i in stackTrace.indices) {
+            Log.d("VM","${stackTrace[i].className}.${stackTrace[i].methodName}:${stackTrace[i].lineNumber}")
+        }
+
+        player = MediaPlayer()
+    }
 
     fun loader(context: Context): ImageLoader {
         if (_loader != null) return _loader!!

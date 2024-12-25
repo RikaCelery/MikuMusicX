@@ -13,27 +13,26 @@ import androidx.compose.animation.slideOut
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -52,10 +51,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private val dataModel by viewModels<VM>()
-
+    val vm by viewModels<VM>()
     override fun onStop() {
-        dataModel.save(dataStore)
+        vm.save(dataStore)
         super.onStop()
     }
 
@@ -67,7 +65,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         GlobalScope.launch {
-            dataModel.load(dataStore)
+            vm.load(dataStore)
         }
         enableEdgeToEdge()
 //        enableEdgeToEdge(SystemBarStyle.auto(Color.CYAN, Color.BLACK), SystemBarStyle.dark(TRANSPARENT))
@@ -105,7 +103,8 @@ fun App() {
             }
         }
     }
-    val state by VM.uiState.collectAsState()
+    val vm = viewModel<VM>()
+    val state by vm.uiState.collectAsState()
     Scaffold(
         topBar = {
             AppTopBar {
@@ -115,7 +114,7 @@ fun App() {
                         navController.navigate(Player(state.currentSong!!.mediaId.toLong()))
                     }, shape = roundedShape) {
                         AsyncImage(
-                            VM.uiState.value.currentSong
+                            vm.uiState.value.currentSong
                                 ?.imageUrl ?: "",
                             null,
                             Modifier.aspectRatio(1f),
@@ -130,22 +129,24 @@ fun App() {
     ) { p ->
         ConstraintLayout(
             modifier =
-                Modifier
-                    .padding(p)
-                    .fillMaxSize(),
+            Modifier
+                .padding(p)
+                .fillMaxSize(),
         ) {
             val (host, plays) = createRefs()
+            val current = LocalViewModelStoreOwner.current!!
             NavHost(
                 navController = navController,
                 startDestination = Home,
+
                 modifier =
-                    Modifier.constrainAs(host) {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom)
-                        height = Dimension.fillToConstraints
-                    },
+                Modifier.constrainAs(host) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                },
                 enterTransition = {
                     slideIn(tween(200)) {
                         IntOffset(it.width, 0)
@@ -157,20 +158,23 @@ fun App() {
                     }
                 },
             ) {
+
                 composable<Home> {
                     HomeScreen(navController, bottomBar = bottomBar)
                 }
                 composable<MusicList> {
-                    MusicListScreen(bottomBar = bottomBar) {
+                    MusicListScreen(bottomBar = bottomBar, vm = vm) {
                         navController.navigate(Player(it.id))
                     }
                 }
                 composable<Settings> {
-                    SettingsScreen(bottomBar = bottomBar)
+                    SettingsScreen(viewModel = vm, bottomBar = bottomBar)
                 }
                 composable<Player> {
-                    PlayerScreen(it.toRoute<Player>().id.toString()) {
-                        navController.popBackStack()
+                    CompositionLocalProvider(LocalViewModelStoreOwner provides current) {
+                        PlayerScreen(it.toRoute<Player>().id.toString(), vm) {
+                            navController.popBackStack()
+                        }
                     }
                 }
             }
@@ -178,13 +182,13 @@ fun App() {
     }
 }
 
-@Suppress("ktlint:standard:function-naming")
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MikuMusicXTheme {
-        Surface(color = MaterialTheme.colorScheme.surface) {
-            App()
-        }
-    }
-}
+// @Suppress("ktlint:standard:function-naming")
+// @Preview(showBackground = true)
+// @Composable
+// fun GreetingPreview() {
+//    MikuMusicXTheme {
+//        Surface(color = MaterialTheme.colorScheme.surface) {
+//            App()
+//        }
+//    }
+// }

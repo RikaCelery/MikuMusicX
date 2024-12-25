@@ -1,21 +1,37 @@
 package github.rikacelery.mikumusicx.screen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import github.rikacelery.mikumusicx.API
+import github.rikacelery.mikumusicx.VM
 import github.rikacelery.mikumusicx.component.MusicCard
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 import kotlinx.coroutines.launch
@@ -28,7 +44,7 @@ data class Music(
 )
 
 val musicData =
-    listOf(
+    mutableStateListOf(
         Music(
             "蜘蛛糸モノポリー",
             "sasakure.UK 初音ミク",
@@ -198,32 +214,74 @@ val musicData =
 fun MusicListScreen(
     navController: NavController = rememberNavController(),
     bottomBar: @Composable () -> Unit = {},
+    vm: VM = viewModel(),
     modifier: Modifier = Modifier,
     onClick: (Music) -> Unit = {},
 ) {
-    LazyColumn(
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        itemsIndexed(musicData) { idx, v ->
-            var url by remember {
-                mutableStateOf("")
-            }
-            LaunchedEffect(Unit) {
-                launch {
-                    url = API.fetchCover(v.id)
-                    println(url)
+    Box {
+        LazyColumn(
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            itemsIndexed(musicData) { idx, v ->
+                var url by remember {
+                    mutableStateOf("")
                 }
+                LaunchedEffect(Unit) {
+                    launch {
+                        url = API.fetchCover(v.id)
+                        println(url)
+                    }
+                }
+                MusicCard(
+                    v.name,
+                    v.artist,
+                    url,
+                    //                cacheKey = v.id.toString(),
+                    viewModel = vm,
+                    onClick = {
+                        onClick(v)
+                    },
+                )
             }
-            MusicCard(
-                v.name,
-                v.artist,
-                url,
-//                cacheKey = v.id.toString(),
-                onClick = {
-                    onClick(v)
-                },
-            )
+        }
+        var show by remember { mutableStateOf(false) }
+        if (show) {
+            Dialog({ show = false }) {
+                DialogBody()
+            }
+        }
+        FloatingActionButton({
+            show=true
+        },Modifier.align(Alignment.BottomEnd)) {
+            Icon(Icons.Outlined.Add, null)
+        }
+    }
+}
+
+@Composable
+fun DialogBody() {
+    var text by remember { mutableStateOf("") }
+    val regex by remember { mutableStateOf("song\\?id=(\\d+)".toRegex()) }
+    Card {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            OutlinedTextField(text, { text = it })
+            val matchGroup =
+                regex
+                    .find(text)
+                    ?.groups
+                    ?.get(1)
+                    ?.value
+            if (matchGroup != null) {
+                Text("解析到的歌曲id是$matchGroup")
+            } else {
+                Text("请将网易云分享链接粘贴到输入框")
+            }
+
+            Button({}) {
+                Text("确认")
+                Icon(Icons.Outlined.Check, null)
+            }
         }
     }
 }
@@ -231,8 +289,17 @@ fun MusicListScreen(
 @Suppress("ktlint:standard:function-naming")
 @Preview(showBackground = true)
 @Composable
-fun MusicListScreenPreview() {
+fun DialogBodyPreview() {
     MikuMusicXTheme {
-        MusicListScreen()
+        DialogBody()
     }
 }
+
+// @Suppress("ktlint:standard:function-naming")
+// @Preview(showBackground = true)
+// @Composable
+// fun MusicListScreenPreview() {
+//    MikuMusicXTheme {
+//        MusicListScreen()
+//    }
+// }

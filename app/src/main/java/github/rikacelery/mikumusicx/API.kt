@@ -50,6 +50,28 @@ object API : AutoCloseable {
 
     private val cache = LRUCache<Long, String>(500)
 
+    suspend fun fetchInfo(musicId: Long): String {
+        if (cache.get(musicId) != null) {
+            return cache.get(musicId)!!
+        }
+        val resp =
+            client
+                .get("https://music.163.com/song") {
+                    parameter("id", musicId)
+                }.bodyAsText()
+        val html = Jsoup.parse(resp)
+        val jsonScript = html.selectFirst("script[type=\"application/ld+json\"]")
+        requireNotNull(jsonScript)
+        val json = Json.parseToJsonElement(jsonScript.html())
+        val cover =
+            json.jsonObject["images"]!!
+                .jsonArray
+                .first()
+                .jsonPrimitive.content
+        cache[musicId] = cover
+        return cover
+    }
+
     suspend fun fetchCover(musicId: Long): String {
         if (cache.get(musicId) != null) {
             return cache.get(musicId)!!
