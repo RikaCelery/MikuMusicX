@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -76,7 +77,7 @@ import com.materialkolor.ktx.toColor
 import com.materialkolor.ktx.toHct
 import github.rikacelery.mikumusicx.API
 import github.rikacelery.mikumusicx.VM
-import github.rikacelery.mikumusicx.component.AnimatedVinyl
+import github.rikacelery.mikumusicx.component.Vinyl
 import github.rikacelery.mikumusicx.domain.Song
 import github.rikacelery.mikumusicx.other.MusicControllerUiState
 import github.rikacelery.mikumusicx.other.PlayerState
@@ -496,15 +497,22 @@ fun SongScreenContent(
                         Box(
                             modifier =
                                 Modifier
-                                    .padding(vertical = 32.dp)
-                                    .clip(MaterialTheme.shapes.medium)
                                     .weight(1f, fill = false)
                                     .fillMaxWidth()
                                     .aspectRatio(1f),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            AnimatedVinyl(painter = imagePainter, isSongPlaying = isSongPlaying)
+                            Vinyl(
+                                modifier =
+                                    Modifier
+                                        .padding(vertical = 32.dp)
+                                        .shadow(10.dp, shape = MaterialTheme.shapes.large)
+                                        .clip(MaterialTheme.shapes.large),
+                                painter = imagePainter,
+                                rotationDegrees = 0f,
+                            )
                         }
-                        Column(Modifier.weight(0.2f)) {
+                        Column {
                             Text(
                                 text = song.title,
                                 style = MaterialTheme.typography.bodyLarge,

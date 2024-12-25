@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.painter.Painter
@@ -85,10 +86,13 @@ fun Vinyl(
             modifier =
                 Modifier
                     .fillMaxSize()
+                    .aspectRatio(1.0f)
+                    .align(Alignment.Center)
                     .rotate(rotationDegrees),
             painter = painter,
+//            contentScale = ContentScale.Fit,
 //            painter = painterResource(id = R.mipmap.cover4),
-            contentDescription = "Vinyl Background",
+            contentDescription = "Song Cover",
         )
 
         // Vinyl song cover
