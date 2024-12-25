@@ -2,6 +2,7 @@ package github.rikacelery.mikumusicx
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
@@ -36,6 +37,8 @@ object API : AutoCloseable {
 
     val client =
         HttpClient(OkHttp) {
+            install(HttpRedirect) {
+            }
             install(HttpTimeout) {
                 connectTimeoutMillis = 10_000
             }

@@ -1,6 +1,7 @@
 package github.rikacelery.mikumusicx.component
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,13 +18,14 @@ import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun AppTopBar(onclick: () -> Unit = {}) {
+fun AppTopBar(tailing:@Composable RowScope.() -> Unit = {}) {
     Row(Modifier.statusBarsPadding().padding(6.dp).height(46.dp), verticalAlignment = Alignment.CenterVertically) {
 //        IconButton(onClick = onclick) {
 //            Icon(Icons.Filled.MoreVert, "settings")
 //        }
         Spacer(Modifier.width(10.dp))
         Text("MikuMusicX", fontSize = 20.sp)
+        tailing()
     }
 }
 

@@ -1,7 +1,7 @@
 package github.rikacelery.mikumusicx.screen
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -202,7 +202,7 @@ fun MusicListScreen(
     onClick: (Music) -> Unit = {},
 ) {
     LazyColumn(
-        modifier.padding(20.dp),
+        contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         itemsIndexed(musicData) { idx, v ->

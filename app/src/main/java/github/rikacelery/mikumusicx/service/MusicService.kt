@@ -1,24 +1,27 @@
 package github.rikacelery.mikumusicx.service
 
+import android.media.MediaPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class MusicService : MediaSessionService() {
+    companion object {
+        var INS: MusicService? = null
+    }
+
     private var mediaSession: MediaSession? = null
 
-    @Inject
     lateinit var exoPlayer: ExoPlayer
+    val player = MediaPlayer()
 
     override fun onCreate() {
         super.onCreate()
-
+        INS = this
+        exoPlayer = ExoPlayer.Builder(applicationContext).build()
         mediaSession =
             MediaSession
                 .Builder(this, exoPlayer)
@@ -29,6 +32,7 @@ class MusicService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession
 
     override fun onDestroy() {
+        INS = null
         mediaSession?.run {
             exoPlayer.release()
             release()

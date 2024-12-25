@@ -38,13 +38,8 @@ private val LightColorScheme =
          */
     )
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
-fun MikuMusicXTheme(
-    // Dynamic color is available on Android 12+
-    viewModel: VM = viewModel(),
-    content: @Composable () -> Unit,
-) {
+fun isDark(viewModel: VM = viewModel()): Boolean {
     val state by viewModel.uiState.collectAsState()
     val dark =
         when (state.darkMode) {
@@ -53,6 +48,18 @@ fun MikuMusicXTheme(
             2 -> true
             else -> error("Invalid dark mode ${state.darkMode}")
         }
+    return dark
+}
+
+@Suppress("ktlint:standard:function-naming")
+@Composable
+fun MikuMusicXTheme(
+    // Dynamic color is available on Android 12+
+    viewModel: VM = viewModel(),
+    content: @Composable () -> Unit,
+) {
+    val state by viewModel.uiState.collectAsState()
+    val dark = isDark()
     val colorScheme =
         when {
             // 使用动态取色
@@ -72,6 +79,7 @@ fun MikuMusicXTheme(
                     dark,
                     true,
                 )
+
             else -> error("Invalid dark mode ${state.darkMode}")
         }
 

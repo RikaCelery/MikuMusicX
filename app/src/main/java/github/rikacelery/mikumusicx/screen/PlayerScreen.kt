@@ -1,5 +1,9 @@
 package github.rikacelery.mikumusicx.screen
 
+import android.graphics.BitmapFactory
+import android.graphics.Color.TRANSPARENT
+import android.media.MediaPlayer
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOutCirc
 import androidx.compose.animation.core.EaseOutElastic
@@ -13,7 +17,6 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.snapping.SnapPosition.Center
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,22 +67,136 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.palette.graphics.Palette
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.materialkolor.hct.Hct
 import com.materialkolor.ktx.toColor
 import com.materialkolor.ktx.toHct
+import github.rikacelery.mikumusicx.API
+import github.rikacelery.mikumusicx.VM
 import github.rikacelery.mikumusicx.component.AnimatedVinyl
 import github.rikacelery.mikumusicx.domain.Song
 import github.rikacelery.mikumusicx.other.MusicControllerUiState
 import github.rikacelery.mikumusicx.other.PlayerState
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
+import github.rikacelery.mikumusicx.ui.theme.isDark
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsBytes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.lang.IllegalStateException
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun PlayerScreen(onNavigateUp: () -> Unit = {}) {
+fun PlayerScreen(
+    id: String,
+    onNavigateUp: () -> Unit = {},
+) {
+    val context = LocalContext.current
+    var dominantColor by remember { mutableStateOf(Color.White) }
+    var cover by remember { mutableStateOf("") }
+    var musicControllerUiState by remember {
+        mutableStateOf(
+            MusicControllerUiState(
+                playerState = PlayerState.PAUSED,
+                currentSong = Song("", "", "", "", cover),
+                currentPosition = 0,
+                totalDuration = 0,
+            ),
+        )
+    }
+    var exoPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var dataSource by remember { mutableStateOf<File?>(null) }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val file = context.cacheDir.resolve("$id.mp3")
+            if (file.exists()) {
+                dataSource = file
+                return@withContext
+            }
+            val res =
+                runCatching {
+                    API.client
+                        .get("http://music.163.com/song/media/outer/url?id=$id.mp3")
+                        .bodyAsBytes()
+                }.onSuccess { bytes ->
+                    Log.i("DOWNLOAD", "Downloaded ${bytes.size}")
+                    file.writeBytes(bytes)
+                    dataSource = file
+                    Log.i("DOWNLOAD", "Local ${file.length()}")
+                }
+        }
+        if (dataSource == null) {
+            return@LaunchedEffect
+        }
+        Log.i("DOWNLOAD", "data $dataSource")
+        var ee: Exception? = null
+        for (i in 0..10) {
+            try {
+                try {
+                    VM.player.reset()
+                } catch (e: IllegalStateException) {
+                    e.printStackTrace()
+                }
+                val fis = FileInputStream(dataSource)
+                VM.player.setDataSource(fis.fd)
+                VM.player.prepare()
+                ee = null
+                break
+            } catch (e: Exception) {
+                ee = e
+                e.printStackTrace()
+                delay(1000)
+                continue
+            }
+        }
+        if (ee != null) {
+            throw ee
+        }
+        musicControllerUiState =
+            musicControllerUiState.copy(
+                totalDuration = VM.player.duration.toLong(),
+            )
+        VM.setPlayingSong(Song(id, "", "", "", cover))
+        launch {
+            while (true) {
+                musicControllerUiState =
+                    musicControllerUiState.copy(
+                        currentPosition = VM.player.currentPosition.toLong(),
+                    )
+                delay(1000)
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            cover = API.fetchCover(id.toLong())
+            val stream =
+                API.client
+                    .get(cover)
+                    .bodyAsBytes()
+                    .inputStream()
+            val bitmap = BitmapFactory.decodeStream(stream)
+            val palette = Palette.from(bitmap).generate()
+            val d = palette.getDominantColor(TRANSPARENT)
+            dominantColor = Color(d)
+            println(dominantColor)
+            println(cover)
+            musicControllerUiState =
+                musicControllerUiState.copy(
+                    currentSong =
+                        musicControllerUiState.currentSong?.copy(
+                            imageUrl = cover,
+                        ),
+                )
+        }
+    }
     Surface {
         Row(
             Modifier
@@ -87,31 +204,25 @@ fun PlayerScreen(onNavigateUp: () -> Unit = {}) {
             Arrangement.Center,
             Alignment.CenterVertically,
         ) {
-            var musicControllerUiState by remember {
-                mutableStateOf(
-                    MusicControllerUiState(
-                        playerState = PlayerState.PAUSED,
-                        currentSong = Song("", "", "", "", ""),
-                        currentPosition = 30,
-                        totalDuration = 120,
-                    ),
-                )
-            }
             SongScreenBody(
-                song = Song("", "", "", "", ""),
+                song = musicControllerUiState.currentSong ?: return@Surface,
+                dominantColor,
                 {
                     when (it) {
                         is SongEvent.PauseSong -> {
+                            VM.player.pause()
                             musicControllerUiState =
                                 musicControllerUiState.copy(playerState = PlayerState.PAUSED)
                         }
 
                         is SongEvent.ResumeSong -> {
+                            VM.player.start()
                             musicControllerUiState =
                                 musicControllerUiState.copy(playerState = PlayerState.PLAYING)
                         }
 
                         is SongEvent.SeekSongToPosition -> {
+                            VM.player.seekTo(it.position.toInt())
                             musicControllerUiState =
                                 musicControllerUiState.copy(currentPosition = it.position)
                         }
@@ -121,7 +232,10 @@ fun PlayerScreen(onNavigateUp: () -> Unit = {}) {
                     }
                 },
                 musicControllerUiState,
-                onNavigateUp,
+                {
+                    exoPlayer?.release()
+                    onNavigateUp()
+                },
             )
         }
     }
@@ -132,7 +246,7 @@ fun PlayerScreen(onNavigateUp: () -> Unit = {}) {
 @Composable
 fun PlayerScreenPreview() {
     MikuMusicXTheme {
-        PlayerScreen()
+        PlayerScreen("")
     }
 }
 
@@ -146,6 +260,7 @@ enum class SlideToActionAnchors {
 @Composable
 fun SongScreenBody(
     song: Song,
+    dominantColor: Color = Color.Transparent,
     onEvent: (SongEvent) -> Unit,
     musicControllerUiState: MusicControllerUiState,
     onNavigateUp: () -> Unit,
@@ -159,8 +274,6 @@ fun SongScreenBody(
 //        )
 
     val backgroundColor = MaterialTheme.colorScheme.background
-
-    val dominantColor by remember { mutableStateOf(Color.Transparent) }
 
     val context = LocalContext.current
 
@@ -259,6 +372,7 @@ fun SongScreenPreview() {
         }
         SongScreenBody(
             song = Song("", "", "", "", ""),
+            Color.Transparent,
             {
                 when (it) {
                     is SongEvent.PauseSong -> {
@@ -307,7 +421,7 @@ fun SongScreenContent(
 ) {
     val hct = dominantColor.toHct()
     val dominantColor =
-        if (isSystemInDarkTheme()) {
+        if (isDark()) {
             Hct.from(hct.hue, hct.tone.coerceAtMost(30.0), 80.0).toColor()
         } else {
             Hct
@@ -318,20 +432,20 @@ fun SongScreenContent(
                 ).toColor()
         }
     val gradientColors =
-        if (isSystemInDarkTheme()) {
+        if (isDark()) {
             listOf(
                 Hct.from(hct.hue, hct.tone.coerceAtMost(50.0), hct.tone * 0.3).toColor(),
                 MaterialTheme.colorScheme.background,
             )
         } else {
             listOf(
-                MaterialTheme.colorScheme.background,
+                Hct.from(hct.hue, hct.tone.coerceAtMost(30.0), 81.0).toColor(),
                 MaterialTheme.colorScheme.background,
             )
         }
 
     val sliderColors =
-        if (isSystemInDarkTheme()) {
+        if (isDark()) {
             SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.onBackground,
                 activeTrackColor = MaterialTheme.colorScheme.onBackground,
@@ -480,10 +594,16 @@ fun SongScreenContent(
                             LaunchedEffect(isSongPlaying) {
                                 launch {
                                     sizeAnimated.animateTo(0f, tween(durationMillis = 0))
-                                    sizeAnimated.animateTo(1f, tween(durationMillis = 200, easing = EaseOutCirc))
+                                    sizeAnimated.animateTo(
+                                        1f,
+                                        tween(durationMillis = 200, easing = EaseOutCirc),
+                                    )
                                 }
                                 rotateAnimated.animateTo(-30f, tween(durationMillis = 0))
-                                rotateAnimated.animateTo(0f, tween(durationMillis = 1000, easing = EaseOutElastic))
+                                rotateAnimated.animateTo(
+                                    0f,
+                                    tween(durationMillis = 1000, easing = EaseOutElastic),
+                                )
                             }
                             if (isSongPlaying) {
                                 Icon(
@@ -546,4 +666,16 @@ fun SongScreenContent(
     }
 }
 
-fun Long.toTime(): String = this.toString()
+fun Long.toTime(): String {
+    val stringBuffer = StringBuffer()
+
+    val minutes = (this / 60000).toInt()
+    val seconds = (this % 60000 / 1000).toInt()
+
+    stringBuffer
+        .append(String.format("%02d", minutes))
+        .append(":")
+        .append(String.format("%02d", seconds))
+
+    return stringBuffer.toString()
+}

@@ -16,12 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import github.rikacelery.mikumusicx.R
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -89,7 +86,8 @@ fun Vinyl(
                 Modifier
                     .fillMaxSize()
                     .rotate(rotationDegrees),
-            painter = painterResource(id = R.mipmap.cover4),
+            painter = painter,
+//            painter = painterResource(id = R.mipmap.cover4),
             contentDescription = "Vinyl Background",
         )
 
@@ -101,7 +99,7 @@ fun Vinyl(
 //                    .rotate(rotationDegrees)
 //                    .aspectRatio(1.0f)
 //                    .align(Alignment.Center),
-////                    .clip(roundedShape)
+// //                    .clip(roundedShape)
 //            painter = painter,
 //            contentDescription = "Song cover",
 //        )

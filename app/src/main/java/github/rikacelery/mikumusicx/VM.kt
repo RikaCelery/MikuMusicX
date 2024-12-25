@@ -1,6 +1,7 @@
 package github.rikacelery.mikumusicx
 
 import android.content.Context
+import android.media.MediaPlayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.datastore.core.DataStore
@@ -12,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import coil3.ImageLoader
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
+import github.rikacelery.mikumusicx.domain.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,6 +22,7 @@ import okio.Path.Companion.toOkioPath
 
 object VM : ViewModel() {
     private var _loader: ImageLoader? = null
+    val player = MediaPlayer()
 
     fun loader(context: Context): ImageLoader {
         if (_loader != null) return _loader!!
@@ -91,6 +94,14 @@ object VM : ViewModel() {
     fun setDynamicColor(bool: Boolean) {
         _uiState.update {
             it.copy(dynamicColor = bool)
+        }
+    }
+
+    fun setPlayingSong(song: Song) {
+        _uiState.update { state ->
+            state.copy(
+                currentSong = song,
+            )
         }
     }
 
