@@ -1,18 +1,27 @@
 package github.rikacelery.mikumusicx.screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,12 +32,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.rememberAsyncImagePainter
+import github.rikacelery.mikumusicx.API
 import github.rikacelery.mikumusicx.R
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -109,8 +126,21 @@ fun HomeScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+                var text by remember { mutableStateOf("加载中...") }
+                LaunchedEffect(Unit) {
+                    for (i in 1..10) {
+                        try {
+                            text =
+                                API.client.get("http://lingrain.online/gonggao.html").bodyAsText()
+                            break
+                        } catch (e: Exception) {
+                            text = e.toString()
+                            delay(1000)
+                        }
+                    }
+                }
                 Text(
-                    "这里是MikuMusic哦!",
+                    text,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary,
                 )
@@ -124,14 +154,86 @@ fun HomeScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+
+                var text by remember { mutableStateOf("加载中...") }
+                LaunchedEffect(Unit) {
+                    for (i in 1..10) {
+                        try {
+                            text =
+                                API.client.get("http://lingrain.online/tuiguang.html").bodyAsText()
+                            break
+                        } catch (e: Exception) {
+                            text = e.toString()
+                            delay(1000)
+                        }
+                    }
+                }
                 Text(
-                    """这里是MikuMusic哦!这里是MikuMusic哦!这里是MikuMusic哦!这里是MikuMusic哦!
-这里是MikuMusic哦!这里是MikuMusic哦!
-ssssss""",
+                    text,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary,
                 )
+                Spacer(Modifier.height(10.dp))
+                val context = LocalContext.current
+                Row(
+                    Modifier.height(20.dp).clickable(onClick = {
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.data = Uri.parse("http://lingrain.online")
+                            startActivity(context, intent, null)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }),
+                ) {
+                    Icon(Icons.Outlined.Web, null, tint = MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.width(10.dp))
+                    Text("官网", color = MaterialTheme.colorScheme.secondary)
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.height(20.dp).clickable(onClick = {
+                        try {
+                            val qq =
+                                Regex("官方QQ群(\\d+)")
+                                    .find(text)
+                                    ?.groups
+                                    ?.get(1)
+                                    ?.value ?: "798593085"
+                            startActivity(
+                                context,
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(
+                                        "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=$qq&card_type=group&source=qrcode",
+                                    ),
+                                ),
+                                null,
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }),
+                ) {
+                    Image(
+                        painterResource(R.mipmap.qq),
+                        null,
+                        contentScale = ContentScale.Fit,
+                        colorFilter =
+                            ColorFilter.tint(
+                                MaterialTheme.colorScheme.secondary,
+                            ),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text("加官方群", color = MaterialTheme.colorScheme.secondary)
+                }
             }
         }
     }
+}
+
+@PreviewLightDark
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen()
 }
