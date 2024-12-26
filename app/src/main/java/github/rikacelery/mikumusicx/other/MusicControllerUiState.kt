@@ -6,7 +6,7 @@ import github.rikacelery.mikumusicx.screen.Music
 data class MusicControllerUiState(
     val playerState: PlayerState? = null,
     val currentSong: Music? = null,
-    val currentPosition: Long = 0L,
+    val currentPosition: Long = 1L,
     val totalDuration: Long = 0L,
     val isShuffleEnabled: Boolean = false,
     val isRepeatOneEnabled: Boolean = false,

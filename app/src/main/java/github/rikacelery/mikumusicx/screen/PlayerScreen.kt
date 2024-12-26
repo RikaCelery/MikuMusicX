@@ -3,6 +3,7 @@ package github.rikacelery.mikumusicx.screen
 import android.graphics.BitmapFactory
 import android.graphics.Color.TRANSPARENT
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -73,7 +74,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.palette.graphics.Palette
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
@@ -93,6 +97,7 @@ import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
 import io.ktor.utils.io.jvm.javaio.toInputStream
@@ -128,11 +133,11 @@ fun PlayerScreen(
     var dataSource by remember { mutableStateOf<File?>(null) }
     var loading by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
+        if (vm.songs.first { it.id == id }.cover.isBlank()) {
+            vm.updateMusic(id, vm.songs.first { it.id == id }.copy(cover = API.fetchCover(id)))
+        }
+        val music = vm.songs.first { it.id == id }
         withContext(Dispatchers.IO) {
-            val music = vm.songs.first { it.id == id }
-            if (music.cover.isBlank()) {
-                vm.updateMusic(id, music.copy(cover = API.fetchCover(id)))
-            }
             API.client
                 .prepareGet(vm.songs[vm.songs.indexOfFirst { it.id == id }].cover)
                 .execute {
@@ -154,6 +159,13 @@ fun PlayerScreen(
                 runCatching {
                     API.client.prepareGet("http://music.163.com/song/media/outer/url?id=$id.mp3")
                         .execute {
+                            if (!it.status.isSuccess()){
+                                throw Exception("Failed to download")
+                            }
+                            if (it.headers[HttpHeaders.ContentLength]==null){
+                                file.delete()
+                                throw Exception("Failed to download")
+                            }
                             Log.i("DOWNLOAD", "Total ${it.headers[HttpHeaders.ContentLength]}")
                             file.outputStream().use { outputStream ->
                                 val inputStream = it.bodyAsChannel().toInputStream()
@@ -192,8 +204,22 @@ fun PlayerScreen(
             var ee: Exception? = null
             for (i in 0..3) {
                 try {
-                    val fis = FileInputStream(dataSource)
-                    vm.setPlayingSong(vm.songs.first { it.id == id }, fis.fd)
+//                    val fis = FileInputStream(dataSource)
+                    vm.controller.setMediaItem(
+                        MediaItem.Builder()
+                            .setMediaId("media-1")
+                            .setUri(dataSource!!.toUri())
+                            .setMediaMetadata(
+                                MediaMetadata.Builder()
+                                    .setArtist(music.artist)
+                                    .setTitle(music.name)
+                                    .setArtworkUri(Uri.parse(music.cover))
+                                    .build()
+                            )
+                            .build()
+                    )
+                    vm.controller.prepare()
+                    vm.setPlayingSong(vm.songs.first { it.id == id })
                     ee = null
                     break
                 } catch (e: Exception) {
@@ -207,7 +233,7 @@ fun PlayerScreen(
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "加载歌曲失败\n$ee", Toast.LENGTH_LONG).show()
                 }
-                vm.resetPlayer()
+//                vm.resetPlayer()
                 return@LaunchedEffect
             }
         }
@@ -215,7 +241,7 @@ fun PlayerScreen(
     LaunchedEffect(Unit) {
         launch {
             while (true) {
-                if (vm.player.isPlaying)
+                if (vm.controller.isPlaying)
                     vm.updatePosition()
                 delay(1000)
             }
@@ -227,17 +253,17 @@ fun PlayerScreen(
         {
             when (it) {
                 is SongEvent.PauseSong -> {
-                    vm.player.pause()
+                    vm.controller.pause()
                     vm.setPlayingState(PlayerState.PAUSED)
                 }
 
                 is SongEvent.ResumeSong -> {
-                    vm.player.start()
+                    vm.controller.play()
                     vm.setPlayingState(PlayerState.PLAYING)
                 }
 
                 is SongEvent.SeekSongToPosition -> {
-                    vm.player.seekTo(it.position.toInt())
+                    vm.controller.seekTo(it.position)
                     vm.seekTo(it.position)
                 }
 
@@ -560,7 +586,7 @@ fun SongScreenContent(
                             Slider(
                                 value = currentTime.toFloat(),
                                 modifier = Modifier.fillMaxWidth(),
-                                valueRange = 0f..totalTime.toFloat(),
+                                valueRange = 0f..totalTime.coerceAtLeast(0).toFloat(),
                                 colors = sliderColors,
                                 onValueChange = onSliderChange,
                             )

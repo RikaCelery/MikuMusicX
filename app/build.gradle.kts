@@ -98,12 +98,12 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
-    implementation(libs.media3.ui)
 
     // ExoPlayer
-//    api(libs.bundles.exoplayer)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.session)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.common)
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)

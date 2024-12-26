@@ -1,5 +1,6 @@
 package github.rikacelery.mikumusicx
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -40,11 +41,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import coil3.compose.AsyncImage
+import com.google.common.util.concurrent.MoreExecutors
 import github.rikacelery.mikumusicx.component.AppBottomNavBar
 import github.rikacelery.mikumusicx.component.AppTopBar
 import github.rikacelery.mikumusicx.screen.HomeScreen
@@ -52,6 +56,7 @@ import github.rikacelery.mikumusicx.screen.MusicListScreen
 import github.rikacelery.mikumusicx.screen.PlayerScreen
 import github.rikacelery.mikumusicx.screen.SettingsScreen
 import github.rikacelery.mikumusicx.service.MusicService
+import github.rikacelery.mikumusicx.service.PlaybackService
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 import github.rikacelery.mikumusicx.ui.theme.roundedShape
 import kotlinx.coroutines.GlobalScope
@@ -81,6 +86,18 @@ class MainActivity : ComponentActivity() {
                 App()
             }
         }
+    }
+    override fun onStart() {
+        super.onStart()
+        val sessionToken = SessionToken(this, ComponentName(this, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
+        controllerFuture.addListener(
+            {
+//                vm.player.release()
+                vm.setMediaController(controllerFuture.get())
+            },
+            MoreExecutors.directExecutor()
+        )
     }
 }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.Color
@@ -16,6 +17,11 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.lifecycle.ViewModel
+import androidx.media3.common.Metadata
+import androidx.media3.common.Player
+import androidx.media3.common.Timeline
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
 import coil3.ImageLoader
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
@@ -33,7 +39,9 @@ import java.io.FileDescriptor
 
 class VM : ViewModel() {
     private var _loader: ImageLoader? = null
-    lateinit var player: MediaPlayer
+
+    //    lateinit var player: MediaPlayer
+    lateinit var controller: MediaController
     private val _songs = mutableStateListOf<Music>()
 
     init {
@@ -46,8 +54,64 @@ class VM : ViewModel() {
                 "${stackTrace[i].className}.${stackTrace[i].methodName}:${stackTrace[i].lineNumber}"
             )
         }
+//        player = MediaPlayer()
+    }
 
-        player = MediaPlayer()
+    fun setMediaController(c: MediaController) {
+        controller = c
+        val listener = object : Player.Listener {
+            override fun onIsLoadingChanged(isLoading: Boolean) {
+                super.onIsLoadingChanged(isLoading)
+                println("loading ${isLoading}")
+                if (isLoading) {
+                    _uiState.update { state ->
+                        state.copy(
+                            musicControllerUiState = state.musicControllerUiState.copy(
+                                loading = true
+                            ),
+                        )
+                    }
+                } else {
+                    _uiState.update { state ->
+                        state.copy(
+                            musicControllerUiState = state.musicControllerUiState.copy(
+                                loading = false,
+//                                totalDuration =
+//                                controller.currentTimeline.getWindow(
+//                                    controller.currentWindowIndex,
+//                                    Timeline.Window()
+//                                ).durationMs,
+                            ),
+                        )
+                    }
+                }
+            }
+
+            @OptIn(UnstableApi::class)
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                super.onTimelineChanged(timeline, reason)
+                println(timeline.toString() + " " + reason.toString())
+                if (timeline.isEmpty) {
+                    setPlayingState(PlayerState.STOPPED)
+                } else {
+//                    setSongTotal(
+//                        timeline.getWindow(
+//                            controller.currentWindowIndex,
+//                            Timeline.Window()
+//                        ).durationMs
+//                    )
+//                    updatePosition()
+                    _uiState.update { state ->
+                        state.copy(
+                            musicControllerUiState = state.musicControllerUiState.copy(
+//                                loading = false
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+        controller.addListener(listener)
     }
 
     fun loader(context: Context): ImageLoader {
@@ -98,9 +162,9 @@ class VM : ViewModel() {
             dataStore.data.collect { value ->
                 (value[keySongs]?.runCatching { Json.decodeFromString<List<Music>>(this) }
                     ?.getOrNull() ?: musicData).forEach { song ->
-                    if (!songs.any { it.id == song.id } ) {
-                            songs.add(song)
-                        }
+                    if (!songs.any { it.id == song.id }) {
+                        songs.add(song)
+                    }
                 }
                 if (_songs.isEmpty()) {
                     _songs.addAll(musicData)
@@ -137,12 +201,13 @@ class VM : ViewModel() {
     }
 
     fun resetPlayer() {
-        player.reset()
+        controller.stop()
+//        player.reset()
         _uiState.update { state ->
             state.copy(
                 musicControllerUiState = state.musicControllerUiState.copy(
                     currentSong = null,
-                    loading = true,
+//                    loading = true,
                     playerState = PlayerState.PAUSED
                 ),
             )
@@ -150,7 +215,7 @@ class VM : ViewModel() {
 
     }
 
-    fun setPlayingSong(song: Music, data: FileDescriptor) {
+    fun setPlayingSong(song: Music) {
         _uiState.update { state ->
             state.copy(
                 musicControllerUiState = state.musicControllerUiState.copy(
@@ -159,23 +224,24 @@ class VM : ViewModel() {
                 ),
             )
         }
-        player.reset()
-        player.setDataSource(data)
-        player.prepare()
-        player.setOnCompletionListener {
-            setPlayingState(PlayerState.STOPPED)
-        }
-        player.setOnPreparedListener {
-            setSongTotal(player.duration.toLong())
-            updatePosition()
-            _uiState.update { state ->
-                state.copy(
-                    musicControllerUiState = state.musicControllerUiState.copy(
-                        loading = false
-                    ),
-                )
-            }
-        }
+
+//        player.reset()
+//        player.setDataSource(data)
+//        player.prepare()
+//        player.setOnCompletionListener {
+//            setPlayingState(PlayerState.STOPPED)
+//        }
+//        player.setOnPreparedListener {
+//            setSongTotal(player.duration.toLong())
+//            updatePosition()
+//            _uiState.update { state ->
+//                state.copy(
+//                    musicControllerUiState = state.musicControllerUiState.copy(
+//                        loading = false
+//                    ),
+//                )
+//            }
+//        }
     }
 
     fun setSongTotal(length: Long) {
@@ -192,7 +258,7 @@ class VM : ViewModel() {
         _uiState.update { state ->
             state.copy(
                 musicControllerUiState = state.musicControllerUiState.copy(
-                    currentPosition = player.currentPosition.toLong()
+                    currentPosition = controller.currentPosition.toLong().coerceAtLeast(0)
                 ),
             )
         }

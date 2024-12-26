@@ -88,22 +88,22 @@ fun HomeScreen(
                     when (page) {
                         0 ->
                             rememberAsyncImagePainter(
-                                R.mipmap.cover1,
+                                R.drawable.cover1,
                             )
 
                         1 ->
                             rememberAsyncImagePainter(
-                                R.mipmap.cover2,
+                                R.drawable.cover2,
                             )
 
                         2 ->
                             rememberAsyncImagePainter(
-                                R.mipmap.cover3,
+                                R.drawable.cover3,
                             )
 
                         3 ->
                             rememberAsyncImagePainter(
-                                R.mipmap.cover4,
+                                R.drawable.cover4,
                             )
 
                         else -> throw IllegalStateException("Page $page not found")
@@ -216,7 +216,7 @@ fun HomeScreen(
                     }),
                 ) {
                     Image(
-                        painterResource(R.mipmap.qq),
+                        painterResource(R.drawable.qq),
                         null,
                         contentScale = ContentScale.Fit,
                         colorFilter =
