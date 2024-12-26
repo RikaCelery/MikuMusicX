@@ -1,7 +1,7 @@
 package github.rikacelery.mikumusicx.domain
 
 data class Song(
-    val mediaId: String,
+    val songId: String,
     val title: String,
     val subtitle: String,
     val songUrl: String,

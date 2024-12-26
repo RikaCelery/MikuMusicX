@@ -1,13 +1,19 @@
 package github.rikacelery.mikumusicx
 
+import android.util.Log
+import github.rikacelery.mikumusicx.screen.Music
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
+import io.ktor.client.request.head
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -20,7 +26,8 @@ object API : AutoCloseable {
     ) {
         private val cache =
             object : LinkedHashMap<K, V>(capacity, 0.75f, true) {
-                override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean = size > capacity
+                override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean =
+                    size > capacity
             }
 
         operator fun get(key: K): V? = cache[key]
@@ -49,10 +56,11 @@ object API : AutoCloseable {
         }
 
     private val cache = LRUCache<Long, String>(500)
+    private val cache2 = LRUCache<Long, Music>(500)
 
-    suspend fun fetchInfo(musicId: Long): String {
-        if (cache.get(musicId) != null) {
-            return cache.get(musicId)!!
+    suspend fun fetchInfo(musicId: Long): Music {
+        if (cache2.get(musicId) != null) {
+            return cache2.get(musicId)!!
         }
         val resp =
             client
@@ -68,8 +76,26 @@ object API : AutoCloseable {
                 .jsonArray
                 .first()
                 .jsonPrimitive.content
+        val music = Music(
+            name = json.jsonObject["title"]!!.jsonPrimitive.content,
+            artist = html.selectFirst("meta[property=\"og:music:artist\"]")?.attr("content") ?: "",
+            id = musicId,
+            cover = cover,
+            desc = html.selectFirst("meta[property=\"og:description\"]")?.attr("content") ?: "",
+        )
+        cache2[musicId] = music
         cache[musicId] = cover
-        return cover
+        return music
+    }
+
+    suspend fun playable(id: Long): Boolean {
+        runCatching { client.head("https://music.163.com/song/media/outer/url?id=$id").status }.onSuccess {
+            Log.i("Check", "$id, $it")
+            return it == HttpStatusCode.OK || it == HttpStatusCode.Found
+        }.onFailure {
+            return false
+        }
+        error("")
     }
 
     suspend fun fetchCover(musicId: Long): String {
@@ -92,6 +118,12 @@ object API : AutoCloseable {
                 .jsonPrimitive.content
         cache[musicId] = cover
         return cover
+    }
+
+    suspend fun redirect(link: String): String {
+        var u = link
+        val s1 = client.head(u)
+        return s1.request.url.toString()
     }
 
     override fun close() {

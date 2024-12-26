@@ -53,7 +53,6 @@ class MusicService : MediaSessionService() {
                     .map {
                         it.buildUpon().setUri(it.mediaId).build()
                     }.toMutableList()
-
             return Futures.immediateFuture(updatedMediaItems)
         }
     }

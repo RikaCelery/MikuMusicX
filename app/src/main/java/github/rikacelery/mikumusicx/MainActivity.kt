@@ -7,6 +7,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
@@ -18,19 +23,21 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -108,14 +115,27 @@ fun App() {
     Scaffold(
         topBar = {
             AppTopBar {
-                if (state.currentSong != null) {
+                if (state.musicControllerUiState.currentSong != null) {
+                    var rotate by remember { mutableFloatStateOf(0f) }
+                    LaunchedEffect(state.musicControllerUiState.playerState) {
+                        animate(
+                            0f,
+                            360f,
+                            animationSpec = infiniteRepeatable(
+                                tween(1000, easing = LinearEasing),
+                                RepeatMode.Restart
+                            )
+                        ) { v, _ ->
+                            rotate = v
+                        }
+                    }
                     Spacer(Modifier.weight(1f))
                     ElevatedCard({
-                        navController.navigate(Player(state.currentSong!!.mediaId.toLong()))
-                    }, shape = roundedShape) {
+                        navController.navigate(Player(state.musicControllerUiState.currentSong!!.id))
+                    }, Modifier.padding(10.dp), shape = roundedShape) {
                         AsyncImage(
-                            vm.uiState.value.currentSong
-                                ?.imageUrl ?: "",
+                            state.musicControllerUiState.currentSong
+                                ?.cover ?: "",
                             null,
                             Modifier.aspectRatio(1f),
                         )
@@ -163,7 +183,7 @@ fun App() {
                     HomeScreen(navController, bottomBar = bottomBar)
                 }
                 composable<MusicList> {
-                    MusicListScreen(bottomBar = bottomBar, vm = vm) {
+                    MusicListScreen(bottomBar = bottomBar, vm = vm, modifier = Modifier.fillMaxSize()) {
                         navController.navigate(Player(it.id))
                     }
                 }
@@ -172,7 +192,7 @@ fun App() {
                 }
                 composable<Player> {
                     CompositionLocalProvider(LocalViewModelStoreOwner provides current) {
-                        PlayerScreen(it.toRoute<Player>().id.toString(), vm) {
+                        PlayerScreen(it.toRoute<Player>().id, vm) {
                             navController.popBackStack()
                         }
                     }

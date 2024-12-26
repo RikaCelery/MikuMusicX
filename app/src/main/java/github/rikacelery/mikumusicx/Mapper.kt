@@ -5,7 +5,7 @@ import github.rikacelery.mikumusicx.domain.Song
 
 fun MediaItem.toSong() =
     Song(
-        mediaId = mediaId,
+        songId = mediaId,
         title = mediaMetadata.title.toString(),
         subtitle = mediaMetadata.subtitle.toString(),
         songUrl = mediaId,
