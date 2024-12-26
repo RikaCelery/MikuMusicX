@@ -5,9 +5,13 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +32,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -244,23 +250,27 @@ fun MusicListScreen(
                 var removeOnHold by remember {
                     mutableStateOf(false)
                 }
-
-                Box(Modifier
+                ElevatedCard(Modifier
                     .animateItem()
                     .height(IntrinsicSize.Min)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onLongPress = {
-                            removeOnHold = true
-                        })
-                    }) {
+                ) {
+                    val interactionSource = remember { MutableInteractionSource() }
                     MusicCard(
                         v.name,
                         v.artist,
                         url,
-                        //                cacheKey = v.id.toString(),
-                        Modifier.pointerInput(Unit) {
-                            detectTapGestures(onLongPress = {
+                        Modifier
+                            .indication(interactionSource, LocalIndication.current)
+                            .pointerInput(Unit) {
+                            detectTapGestures(onPress = {
+                                val press = PressInteraction.Press(it)
+                                interactionSource.emit(press)
+                                tryAwaitRelease()
+                                interactionSource.emit(PressInteraction.Release(press))
+                            }, onLongPress = {
                                 removeOnHold = true
+                            }, onTap = {
+                                onClick(v)
                             })
                         },
                         viewModel = vm,
@@ -269,44 +279,47 @@ fun MusicListScreen(
                     AnimatedVisibility(
                         removeOnHold,
                         Modifier
-                            .clip(MaterialTheme.shapes.medium),
+                        ,
                         enter = slideIn {
-                            IntOffset(-it.width,0)
+                            IntOffset(-it.width, 0)
                         },
                         exit = slideOut {
-                            IntOffset(-it.width,0)
+                            IntOffset(-it.width, 0)
                         }
                     ) {
-                    Box(
-                        Modifier
-                            .pointerInput(Unit) {
-                                detectTapGestures {
-
-                                    removeOnHold = false
+                        Box(
+                            Modifier
+                                .pointerInput(Unit) {
+                                    detectTapGestures {
+                                        removeOnHold = false
+                                    }
                                 }
-                            }
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.errorContainer,
-                                        MaterialTheme.colorScheme.errorContainer,
-                                        Color.Transparent
-                                    ),
-                                    end = Offset( 300.dp.value,0f),
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.errorContainer,
+                                            MaterialTheme.colorScheme.errorContainer,
+                                            Color.Transparent
+                                        ),
+                                        end = Offset(300.dp.value, 0f),
+                                    )
                                 )
-                            )
-                            .fillMaxHeight()
-                            .fillMaxWidth()
-                    ) {
-                        IconButton(
-                            {
-                                vm.removeSong(v.id)
-                            },
-                            Modifier.align(Alignment.CenterStart),
+                                .fillMaxHeight()
+                                .fillMaxWidth()
                         ) {
-                            Icon(Icons.Outlined.Delete, "remove song", tint = MaterialTheme.colorScheme.error  )
+                            IconButton(
+                                {
+                                    vm.removeSong(v.id)
+                                },
+                                Modifier.align(Alignment.CenterStart),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    "remove song",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
-                    }
                     }
                 }
             }
