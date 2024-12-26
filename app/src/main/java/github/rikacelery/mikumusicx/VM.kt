@@ -96,9 +96,13 @@ class VM : ViewModel() {
 
         try {
             dataStore.data.collect { value ->
-                _songs.addAll(value[keySongs]?.runCatching { Json.decodeFromString<List<Music>>(this) }
-                    ?.getOrNull() ?: musicData)
-                if (_songs.size == 0) {
+                (value[keySongs]?.runCatching { Json.decodeFromString<List<Music>>(this) }
+                    ?.getOrNull() ?: musicData).forEach { song ->
+                    if (!songs.any { it.id == song.id } ) {
+                            songs.add(song)
+                        }
+                }
+                if (_songs.isEmpty()) {
                     _songs.addAll(musicData)
                 }
                 _uiState.update { state ->
