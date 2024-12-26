@@ -129,11 +129,9 @@ fun PlayerScreen(
     var loading by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            val music = vm.songs.single { it.id == id }
+            val music = vm.songs.first { it.id == id }
             if (music.cover.isBlank()) {
-                vm.songs[vm.songs.indexOfFirst { it.id == id }] = music.copy(
-                    cover = API.fetchCover(id)
-                )
+                vm.updateMusic(id, music.copy(cover = API.fetchCover(id)))
             }
             API.client
                 .prepareGet(vm.songs[vm.songs.indexOfFirst { it.id == id }].cover)
