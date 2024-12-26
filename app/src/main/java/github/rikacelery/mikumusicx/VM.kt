@@ -220,15 +220,24 @@ class VM : ViewModel() {
         get() = _songs
 
     fun addSong(song: Music) {
-        if (_songs.any { it.id == song.id }) return
-        _songs.add(song)
+        synchronized(this) {
+            if (_songs.any { it.id == song.id }) return
+            _songs.add(song)
+        }
     }
 
     fun removeSong(id: Long) {
-        _songs.removeIf { it.id == id }
+        synchronized(this) {
+            _songs.removeIf { it.id == id }
+        }
     }
 
     fun updateMusic(id: Long, info: Music) {
-        _songs[_songs.indexOfFirst { it.id == id }] = info
+        synchronized(this) {
+            val pos = _songs.indexOfFirst { it.id == id }
+            _songs.removeIf({ it.id == id })
+            if (pos == -1) return
+            _songs.add(pos, info)
+        }
     }
 }
