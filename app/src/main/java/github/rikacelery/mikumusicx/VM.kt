@@ -60,6 +60,7 @@ class VM : ViewModel() {
     fun setMediaController(c: MediaController) {
         controller = c
         val listener = object : Player.Listener {
+            @UnstableApi
             override fun onIsLoadingChanged(isLoading: Boolean) {
                 super.onIsLoadingChanged(isLoading)
                 println("loading ${isLoading}")
@@ -76,13 +77,26 @@ class VM : ViewModel() {
                         state.copy(
                             musicControllerUiState = state.musicControllerUiState.copy(
                                 loading = false,
-//                                totalDuration =
-//                                controller.currentTimeline.getWindow(
-//                                    controller.currentWindowIndex,
-//                                    Timeline.Window()
-//                                ).durationMs,
+                                totalDuration =
+                                controller.currentTimeline.getWindow(
+                                    controller.currentWindowIndex,
+                                    Timeline.Window()
+                                ).durationMs,
                             ),
                         )
+                    }
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                if (isPlaying) {
+                    setPlayingState(PlayerState.PLAYING)
+                } else {
+                    if (controller.currentTimeline.isEmpty) {
+                        setPlayingState(PlayerState.STOPPED)
+                    } else {
+                        setPlayingState(PlayerState.PAUSED)
                     }
                 }
             }
@@ -202,13 +216,16 @@ class VM : ViewModel() {
 
     fun resetPlayer() {
         controller.stop()
+        controller.seekTo(0)
 //        player.reset()
         _uiState.update { state ->
             state.copy(
                 musicControllerUiState = state.musicControllerUiState.copy(
                     currentSong = null,
 //                    loading = true,
-                    playerState = PlayerState.PAUSED
+                    playerState = PlayerState.PAUSED,
+                    currentPosition = 0
+
                 ),
             )
         }
@@ -216,6 +233,9 @@ class VM : ViewModel() {
     }
 
     fun setPlayingSong(song: Music) {
+        if (_uiState.value.musicControllerUiState.currentSong?.id == song.id) {
+            return
+        }
         _uiState.update { state ->
             state.copy(
                 musicControllerUiState = state.musicControllerUiState.copy(

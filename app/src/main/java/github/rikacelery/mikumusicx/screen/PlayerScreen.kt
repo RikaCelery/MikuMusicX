@@ -153,7 +153,6 @@ fun PlayerScreen(
             loading = false
             return@LaunchedEffect
         } else {
-            vm.resetPlayer()
             withContext(Dispatchers.IO) {
                 val file = context.cacheDir.resolve("$id.mp3")
                 runCatching {
@@ -204,6 +203,7 @@ fun PlayerScreen(
             var ee: Exception? = null
             for (i in 0..3) {
                 try {
+                    vm.resetPlayer()
 //                    val fis = FileInputStream(dataSource)
                     vm.controller.setMediaItem(
                         MediaItem.Builder()
@@ -254,12 +254,10 @@ fun PlayerScreen(
             when (it) {
                 is SongEvent.PauseSong -> {
                     vm.controller.pause()
-                    vm.setPlayingState(PlayerState.PAUSED)
                 }
 
                 is SongEvent.ResumeSong -> {
                     vm.controller.play()
-                    vm.setPlayingState(PlayerState.PLAYING)
                 }
 
                 is SongEvent.SeekSongToPosition -> {
