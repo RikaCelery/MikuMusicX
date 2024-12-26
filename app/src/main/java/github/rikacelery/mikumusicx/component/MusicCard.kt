@@ -65,7 +65,7 @@ fun MusicCard(
     ConstraintLayout(
         modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(130.dp),
     ) {
         var dominant by remember { mutableStateOf(if (dark) Color.White else Color.DarkGray) }
         var colorLight by remember { mutableStateOf(if (dark) Color.DarkGray else Color.White) }
@@ -176,11 +176,13 @@ fun MusicCard(
                 name,
                 color = dominant,
                 style = MaterialTheme.typography.titleMedium,
+                maxLines = 2
             )
             Text(
                 artist,
                 color = dominant,
                 style = MaterialTheme.typography.bodySmall,
+                maxLines = 1
             )
         }
     }

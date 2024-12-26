@@ -250,77 +250,97 @@ fun MusicListScreen(
                 var removeOnHold by remember {
                     mutableStateOf(false)
                 }
-                ElevatedCard(Modifier
-                    .animateItem()
-                    .height(IntrinsicSize.Min)
-                ) {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    MusicCard(
-                        v.name,
-                        v.artist,
-                        url,
-                        Modifier
-                            .indication(interactionSource, LocalIndication.current)
-                            .pointerInput(Unit) {
-                            detectTapGestures(onPress = {
-                                val press = PressInteraction.Press(it)
-                                interactionSource.emit(press)
-                                tryAwaitRelease()
-                                interactionSource.emit(PressInteraction.Release(press))
-                            }, onLongPress = {
-                                removeOnHold = true
-                            }, onTap = {
-                                onClick(v)
-                            })
-                        },
-                        viewModel = vm,
+                var showDesc by remember {
+                    mutableStateOf(false)
+                }
 
-                        )
-                    AnimatedVisibility(
-                        removeOnHold,
-                        Modifier
-                        ,
-                        enter = slideIn {
-                            IntOffset(-it.width, 0)
-                        },
-                        exit = slideOut {
-                            IntOffset(-it.width, 0)
-                        }
-                    ) {
-                        Box(
+                ElevatedCard(
+                    Modifier
+                        .animateItem()
+                        .height(IntrinsicSize.Min)
+                ) {
+                    Box {
+                        val interactionSource = remember { MutableInteractionSource() }
+                        MusicCard(
+                            v.name,
+                            v.artist,
+                            url,
                             Modifier
+                                .indication(interactionSource, LocalIndication.current)
                                 .pointerInput(Unit) {
-                                    detectTapGestures {
-                                        removeOnHold = false
-                                    }
-                                }
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.errorContainer,
-                                            MaterialTheme.colorScheme.errorContainer,
-                                            Color.Transparent
-                                        ),
-                                        end = Offset(300.dp.value, 0f),
-                                    )
-                                )
-                                .fillMaxHeight()
-                                .fillMaxWidth()
-                        ) {
-                            IconButton(
-                                {
-                                    vm.removeSong(v.id)
+                                    detectTapGestures(onPress = {
+                                        val press = PressInteraction.Press(it)
+                                        interactionSource.emit(press)
+                                        tryAwaitRelease()
+                                        interactionSource.emit(PressInteraction.Release(press))
+                                    }, onLongPress = {
+                                        removeOnHold = true
+                                    }, onDoubleTap = {
+                                        showDesc = !showDesc
+                                    }, onTap = {
+                                        onClick(v)
+                                    })
                                 },
-                                Modifier.align(Alignment.CenterStart),
+                            viewModel = vm,
+
+                            )
+                        this@ElevatedCard.AnimatedVisibility(
+                            removeOnHold,
+                            Modifier,
+                            enter = slideIn {
+                                IntOffset(-it.width, 0)
+                            },
+                            exit = slideOut {
+                                IntOffset(-it.width, 0)
+                            }
+                        ) {
+                            Box(
+                                Modifier
+                                    .pointerInput(Unit) {
+                                        detectTapGestures {
+                                            removeOnHold = false
+                                        }
+                                    }
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                MaterialTheme.colorScheme.errorContainer,
+                                                MaterialTheme.colorScheme.errorContainer,
+                                                Color.Transparent
+                                            ),
+                                            end = Offset(300.dp.value, 0f),
+                                        )
+                                    )
+                                    .fillMaxHeight()
+                                    .fillMaxWidth()
                             ) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    "remove song",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                                IconButton(
+                                    {
+                                        vm.removeSong(v.id)
+                                    },
+                                    Modifier.align(Alignment.CenterStart),
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        "remove song",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }
+                    AnimatedVisibility(showDesc,Modifier.padding(10.dp).fillMaxWidth()) {
+                        Text(v.desc)
+                        LaunchedEffect(Unit) {
+                            if (v.desc.isBlank()) {
+                                kotlin.runCatching {
+                                    val info = API.fetchInfo(v.id)
+                                    vm.updateMusic(v.id, info)
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
         }

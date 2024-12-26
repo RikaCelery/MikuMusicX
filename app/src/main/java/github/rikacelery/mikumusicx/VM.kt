@@ -98,7 +98,7 @@ class VM : ViewModel() {
             dataStore.data.collect { value ->
                 _songs.addAll(value[keySongs]?.runCatching { Json.decodeFromString<List<Music>>(this) }
                     ?.getOrNull() ?: musicData)
-                if(_songs.size==0){
+                if (_songs.size == 0) {
                     _songs.addAll(musicData)
                 }
                 _uiState.update { state ->
@@ -216,8 +216,9 @@ class VM : ViewModel() {
 
     private val _uiState = MutableStateFlow(VMState())
     val uiState = _uiState.asStateFlow()
-    val songs:SnapshotStateList<Music>
+    val songs: SnapshotStateList<Music>
         get() = _songs
+
     fun addSong(song: Music) {
         if (_songs.any { it.id == song.id }) return
         _songs.add(song)
@@ -225,5 +226,9 @@ class VM : ViewModel() {
 
     fun removeSong(id: Long) {
         _songs.removeIf { it.id == id }
+    }
+
+    fun updateMusic(id: Long, info: Music) {
+        _songs[_songs.indexOfFirst { it.id == id }] = info
     }
 }
