@@ -8,8 +8,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,14 +81,15 @@ fun Vinyl(
     Box(
         modifier =
             modifier
-                .aspectRatio(1.0f),
+//                .aspectRatio(1.0f),
 //                .clip(roundedShape)
     ) {
         // Vinyl background
         Image(
             modifier =
                 Modifier
-                    .fillMaxSize()
+                    .height(IntrinsicSize.Max)
+                    .width(IntrinsicSize.Max)
                     .aspectRatio(1.0f)
                     .align(Alignment.Center)
                     .rotate(rotationDegrees),

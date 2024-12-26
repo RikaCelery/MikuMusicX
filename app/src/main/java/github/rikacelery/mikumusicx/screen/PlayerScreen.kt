@@ -20,13 +20,17 @@ import androidx.compose.foundation.gestures.snapping.SnapPosition.Center
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Forward10
@@ -495,19 +499,25 @@ fun SongScreenContent(
                     }
                     Column(
                         modifier = Modifier.padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Box(
                             modifier =
                                 Modifier
-                                    .weight(1f, fill = false)
-                                    .fillMaxWidth()
-                                    .aspectRatio(1f),
+                                    .weight(1f, fill = true)
+                                    .height(IntrinsicSize.Max)
+                                    .width(IntrinsicSize.Max)
+//                                    .fillMaxSize()
+                                    .aspectRatio(1f)
+                            ,
                             contentAlignment = Alignment.Center,
                         ) {
                             Vinyl(
                                 modifier =
                                     Modifier
                                         .padding(vertical = 32.dp)
+                                        .fillMaxSize()
+                                        .aspectRatio(1f)
                                         .shadow(10.dp, shape = MaterialTheme.shapes.large)
                                         .clip(MaterialTheme.shapes.large),
                                 painter = imagePainter,
