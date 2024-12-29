@@ -9,7 +9,10 @@ plugins {
     id("dagger.hilt.android.plugin")
     kotlin("plugin.serialization") version "2.1.0"
 }
-
+val versionMajor = 0
+val versionMinor = 3
+val versionPatch = 0
+val versionBuild = 0 // bump for dogfood builds, public betas, etc.
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -36,8 +39,8 @@ android {
         minSdk = 24
         //noinspection EditedTargetSdkVersion
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.3.0"
+        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
+        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
