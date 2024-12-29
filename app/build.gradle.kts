@@ -13,6 +13,11 @@ val versionMajor = 0
 val versionMinor = 3
 val versionPatch = 0
 val versionBuild = 0 // bump for dogfood builds, public betas, etc.
+
+require(versionMinor < 100)
+require(versionPatch < 100)
+require(versionBuild < 100)
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -39,7 +44,8 @@ android {
         minSdk = 24
         //noinspection EditedTargetSdkVersion
         targetSdk = 34
-        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
+        versionCode =
+            versionMajor * 1000000 + versionMinor * 10000 + versionPatch * 100 + versionBuild
         versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -103,7 +109,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
     //FFT
-    implementation ("com.github.paramsen:noise:2.0.0")
+    implementation("com.github.paramsen:noise:2.0.0")
 
 
     // ExoPlayer
