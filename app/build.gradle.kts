@@ -11,7 +11,7 @@ plugins {
 }
 val versionMajor = 0
 val versionMinor = 3
-val versionPatch = 0
+val versionPatch = 1
 val versionBuild = 0 // bump for dogfood builds, public betas, etc.
 
 require(versionMinor < 100)
