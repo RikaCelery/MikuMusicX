@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    id("dagger.hilt.android.plugin")
     kotlin("plugin.serialization") version "2.1.0"
 }
 
@@ -37,7 +37,7 @@ android {
         //noinspection EditedTargetSdkVersion
         targetSdk = 34
         versionCode = 1
-        versionName = "0.2.5"
+        versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -57,11 +57,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -80,10 +80,12 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
     implementation("androidx.palette:palette-ktx:1.0.0")
     // Dagger - Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
+//    implementation("com.google.dagger:hilt-android:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
-    kapt("com.google.dagger:hilt-compiler:2.51.1")
+//    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+//    kapt("com.google.dagger:hilt-compiler:2.51.1")
 
     @Suppress("ktlint:standard:property-naming")
     val ktor_version = "3.0.2"
@@ -97,6 +99,8 @@ dependencies {
     val nav_version = "2.8.4"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
+    //FFT
+    implementation ("com.github.paramsen:noise:2.0.0")
 
 
     // ExoPlayer

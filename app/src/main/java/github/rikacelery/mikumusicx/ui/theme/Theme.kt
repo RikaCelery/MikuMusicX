@@ -8,12 +8,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidedValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.materialkolor.rememberDynamicColorScheme
-import github.rikacelery.mikumusicx.VM
+import github.rikacelery.mikumusicx.ui.Settings
 
 private val DarkColorScheme =
     darkColorScheme(
@@ -38,55 +37,67 @@ private val LightColorScheme =
          */
     )
 
-@Composable
-fun isDark(viewModel: VM = viewModel()): Boolean {
-    val state by viewModel.uiState.collectAsState()
-    val dark =
-        when (state.darkMode) {
-            0 -> isSystemInDarkTheme()
-            1 -> false
-            2 -> true
-            else -> error("Invalid dark mode ${state.darkMode}")
-        }
-    return dark
-}
+//@Composable
+//fun isDark(viewModel: VM = viewModel()): Boolean {
+//    val state by viewModel.uiState.collectAsState()
+//    val dark =
+//        when (state.darkMode) {
+//            0 -> isSystemInDarkTheme()
+//            1 -> false
+//            2 -> true
+//            else -> error("Invalid dark mode ${state.darkMode}")
+//        }
+//    return dark
+//}
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun MikuMusicXTheme(
     // Dynamic color is available on Android 12+
-    viewModel: VM = viewModel(),
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val state by viewModel.uiState.collectAsState()
-    val dark = isDark()
+    val values: MutableList<ProvidedValue<out Any>> = mutableListOf()
     val colorScheme =
         when {
             // 使用动态取色
-            state.dynamicColor -> {
+            Settings.dynamicColor -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val context = LocalContext.current
-                    if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                    val theme = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
+                        context
+                    )
+//                    val current = LocalDynamicMaterialThemeSeed.current
+//                    val providedDynamicSeed =
+//                        LocalDynamicMaterialThemeSeed provides if (!Settings.dynamicColor) current else Settings.seedColor
+//                    values.add(providedDynamicSeed)
+                    theme
                 } else {
-                    // fallback
-                    if (dark) DarkColorScheme else LightColorScheme
+                    rememberDynamicColorScheme(
+                        Settings.seedColor,
+                        darkTheme,
+                        true,
+                    )
                 }
             }
             // 不使用动态取色
-            !state.dynamicColor ->
+            !Settings.dynamicColor ->
+                // fallback
+
                 rememberDynamicColorScheme(
-                    state.seedColor,
-                    dark,
+                    Settings.seedColor,
+                    darkTheme,
                     true,
                 )
 
-            else -> error("Invalid dark mode ${state.darkMode}")
+            else -> error("Invalid dark mode")
         }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content,
-        shapes = Shapes,
-    )
+    CompositionLocalProvider(*values.toTypedArray()){
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content,
+            shapes = Shapes,
+        )
+    }
 }

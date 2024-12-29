@@ -1,7 +1,7 @@
 package github.rikacelery.mikumusicx
 
 import android.util.Log
-import github.rikacelery.mikumusicx.screen.Music
+import github.rikacelery.mikumusicx.domain.model.Song
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpRedirect
@@ -12,7 +12,6 @@ import io.ktor.client.request.head
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.request
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -55,10 +54,10 @@ object API : AutoCloseable {
             }
         }
 
-    private val cache = LRUCache<Long, String>(500)
-    private val cache2 = LRUCache<Long, Music>(500)
+    private val cache = LRUCache<String, String>(500)
+    private val cache2 = LRUCache<String, Song>(500)
 
-    suspend fun fetchInfo(musicId: Long): Music {
+    suspend fun fetchInfo(musicId: String): Song {
         if (cache2.get(musicId) != null) {
             return cache2.get(musicId)!!
         }
@@ -76,11 +75,11 @@ object API : AutoCloseable {
                 .jsonArray
                 .first()
                 .jsonPrimitive.content
-        val music = Music(
-            name = json.jsonObject["title"]!!.jsonPrimitive.content,
-            artist = html.selectFirst("meta[property=\"og:music:artist\"]")?.attr("content") ?: "",
-            id = musicId,
-            cover = cover,
+        val music = Song(
+            title = json.jsonObject["title"]!!.jsonPrimitive.content,
+            subtitle = html.selectFirst("meta[property=\"og:music:artist\"]")?.attr("content") ?: "",
+            mediaId = musicId,
+            imageUrl = cover,
             desc = html.selectFirst("meta[property=\"og:description\"]")?.attr("content") ?: "",
         )
         cache2[musicId] = music
@@ -88,7 +87,7 @@ object API : AutoCloseable {
         return music
     }
 
-    suspend fun playable(id: Long): Boolean {
+    suspend fun playable(id: String): Boolean {
         runCatching { client.head("https://music.163.com/song/media/outer/url?id=$id").status }.onSuccess {
             Log.i("Check", "$id, $it")
             return it == HttpStatusCode.OK || it == HttpStatusCode.Found
@@ -98,7 +97,11 @@ object API : AutoCloseable {
         error("")
     }
 
-    suspend fun fetchCover(musicId: Long): String {
+    suspend fun fetchCover(musicId: String): String {
+        if (musicId.isBlank()){
+            Log.e("FETCH", "musicId is blank")
+            return ""
+        }
         if (cache.get(musicId) != null) {
             return cache.get(musicId)!!
         }
