@@ -57,13 +57,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import coil3.request.placeholder
 import coil3.toBitmap
 import com.materialkolor.hct.Hct
 import com.materialkolor.ktx.toColor
 import com.materialkolor.ktx.toHct
 import github.rikacelery.mikumusicx.API
-import github.rikacelery.mikumusicx.R
 import github.rikacelery.mikumusicx.domain.model.Song
 import github.rikacelery.mikumusicx.domain.other.getVibrantColor
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
@@ -116,7 +114,7 @@ fun CurrentSongCard(
             model =
             ImageRequest
                 .Builder(context)
-                .placeholder(R.drawable.ic_launcher_foreground)
+//                .placeholder(R.drawable.ic_launcher_foreground)
                 .data(song.imageUrl.ifBlank {
                     runBlocking(Dispatchers.IO) {
                         API.fetchCover(song.mediaId)
