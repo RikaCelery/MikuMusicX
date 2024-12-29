@@ -5,12 +5,15 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOutCirc
 import androidx.compose.animation.core.EaseOutElastic
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -27,7 +30,6 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,7 +66,6 @@ import github.rikacelery.mikumusicx.API
 import github.rikacelery.mikumusicx.R
 import github.rikacelery.mikumusicx.domain.model.Song
 import github.rikacelery.mikumusicx.domain.other.getVibrantColor
-import github.rikacelery.mikumusicx.domain.other.transformDominant
 import github.rikacelery.mikumusicx.ui.theme.MikuMusicXTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,7 +76,8 @@ fun CurrentSongCard(
     song: Song,
     isSongPlaying: Boolean,
     modifier: Modifier = Modifier,
-    albumScale : Float=0f,
+    progress: Float = 0f,
+    albumScale: Float = 0f,
     playOrToggleSong: () -> Unit = {},
     playPreviousSong: () -> Unit = {},
     playNextSong: () -> Unit = {},
@@ -86,17 +88,13 @@ fun CurrentSongCard(
         derivedStateOf {
             val hct = dominantColor.toHct()
             val res = if (darkTheme) {
-                Hct.from(hct.hue, hct.tone.coerceAtMost(50.0), hct.tone * 0.3).toColor()
+                Hct.from(hct.hue, hct.tone.coerceAtMost(50.0), 90.0).toColor()
             } else {
                 Hct.from(hct.hue, hct.tone.coerceAtMost(50.0), 81.0).toColor()
             }
-            transformDominant(darkTheme,dominantColor)
             res
         }
     }
-
-    val backgroundColor = MaterialTheme.colorScheme.background
-
     val context = LocalContext.current
 
     val hct = dominantColor.toHct()
@@ -108,29 +106,8 @@ fun CurrentSongCard(
             )
         } else {
             listOf(
-                Hct.from(hct.hue, hct.tone.coerceAtMost(30.0), 91.0).toColor(),
+                Hct.from(hct.hue, hct.tone.coerceAtMost(30.0), 81.0).toColor(),
                 MaterialTheme.colorScheme.background,
-            )
-        }
-
-    val sliderColors =
-        if (darkTheme) {
-            SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.onBackground,
-                activeTrackColor = MaterialTheme.colorScheme.onBackground,
-                inactiveTrackColor =
-                MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = .2f,
-                ),
-            )
-        } else {
-            SliderDefaults.colors(
-                thumbColor = dominantColor,
-                activeTrackColor = dominantColor,
-                inactiveTrackColor =
-                dominantColor.copy(
-                    alpha = .2f,
-                ),
             )
         }
 
@@ -152,102 +129,114 @@ fun CurrentSongCard(
                 dominantColor = getVibrantColor(bitmap)
             }
         )
-    Surface(modifier.height(80.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .background(Brush.linearGradient(gradientColors))
-                .padding(8.dp)
-                .fillMaxWidth(),
-        ) {
-            Image(
-                imagePainter,
-                "song vinyl",
-                Modifier
-                    .scale(1+albumScale.div(2))
-                    .shadow(8.dp, shape = MaterialTheme.shapes.medium)
-                    .clip(MaterialTheme.shapes.medium)
-                    .size(48.dp)
-                    .aspectRatio(1f),
-                contentScale = ContentScale.Fit
-            )
-            Spacer(Modifier.width(5.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    song.subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier =
-                    Modifier.graphicsLayer {
-                        alpha = 0.60f
-                    },
-                )
-            }
-            Spacer(Modifier.width(5.dp))
-            Row(Modifier.width(128.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Rounded.SkipPrevious,
-                    contentDescription = "Skip Previous",
-                    modifier =
+    Surface(modifier) {
+        Box(){
+            Row(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .height(IntrinsicSize.Min)
+                    .background(Brush.linearGradient(gradientColors))
+                    .padding(8.dp)
+                    .fillMaxWidth(),
+            ) {
+                Image(
+                    imagePainter,
+                    "song vinyl",
                     Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = playPreviousSong)
-                        .size(32.dp),
-                    tint = tint,
+                        .scale(1 + albumScale.div(2))
+                        .shadow(8.dp, shape = MaterialTheme.shapes.medium)
+                        .clip(MaterialTheme.shapes.medium)
+                        .size(48.dp)
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Fit
                 )
-                val rotateAnimated by remember { mutableStateOf(Animatable(30f)) }
-                val sizeAnimated by remember { mutableStateOf(Animatable(1f)) }
-                LaunchedEffect(isSongPlaying) {
-                    launch {
-                        sizeAnimated.animateTo(0f, tween(durationMillis = 0))
-                        sizeAnimated.animateTo(
-                            1f,
-                            tween(durationMillis = 200, easing = EaseOutCirc),
-                        )
-                    }
-                    rotateAnimated.animateTo(-30f, tween(durationMillis = 0))
-                    rotateAnimated.animateTo(
-                        0f,
-                        tween(durationMillis = 1000, easing = EaseOutElastic),
+                Spacer(Modifier.width(5.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = song.title,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Text(
+                        song.subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier =
+                        Modifier.graphicsLayer {
+                            alpha = 0.60f
+                        },
                     )
                 }
-                Icon(
-                    if (isSongPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    contentDescription = "Play",
-                    tint = MaterialTheme.colorScheme.background,
-                    modifier =
-                    Modifier
-                        .clip(CircleShape)
-                        .rotate(rotateAnimated.value)
-                        .background(tint)
-                        .clickable(onClick = playOrToggleSong)
-                        .size(48.dp)
-                        .padding(8.dp)
-                        .scale(sizeAnimated.value),
-                )
+                Spacer(Modifier.width(5.dp))
+                Row(Modifier.width(128.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.SkipPrevious,
+                        contentDescription = "Skip Previous",
+                        modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .clickable(onClick = playPreviousSong)
+                            .size(32.dp),
+                        tint = tint,
+                    )
+                    val rotateAnimated by remember { mutableStateOf(Animatable(30f)) }
+                    val sizeAnimated by remember { mutableStateOf(Animatable(1f)) }
+                    LaunchedEffect(isSongPlaying) {
+                        launch {
+                            sizeAnimated.animateTo(0f, tween(durationMillis = 0))
+                            sizeAnimated.animateTo(
+                                1f,
+                                tween(durationMillis = 200, easing = EaseOutCirc),
+                            )
+                        }
+                        rotateAnimated.animateTo(-30f, tween(durationMillis = 0))
+                        rotateAnimated.animateTo(
+                            0f,
+                            tween(durationMillis = 1000, easing = EaseOutElastic),
+                        )
+                    }
+                    Icon(
+                        if (isSongPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = "Play",
+                        tint = MaterialTheme.colorScheme.background,
+                        modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .rotate(rotateAnimated.value)
+                            .background(tint)
+                            .clickable(onClick = playOrToggleSong)
+                            .size(48.dp)
+                            .padding(8.dp)
+                            .scale(sizeAnimated.value),
+                    )
 
 
-                Icon(
-                    imageVector = Icons.Rounded.SkipNext,
-                    contentDescription = "Skip Next",
-                    modifier =
-                    Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = playNextSong)
-                        .size(32.dp),
-                    tint = tint,
-                )
+                    Icon(
+                        imageVector = Icons.Rounded.SkipNext,
+                        contentDescription = "Skip Next",
+                        modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .clickable(onClick = playNextSong)
+                            .size(32.dp),
+                        tint = tint,
+                    )
+                }
+
+            }
+            Canvas(
+                Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                drawRect(dominantColor,size = size.copy(width = size.width*progress))
             }
         }
     }
@@ -259,7 +248,7 @@ fun CurrentSongCard(
 @Preview(showBackground = true)
 fun PreviewCurSongCard() {
     MikuMusicXTheme {
-        Column(Modifier.height(80.dp)) {
+        Column(Modifier) {
             CurrentSongCard(
                 Song(
                     "2052275194",

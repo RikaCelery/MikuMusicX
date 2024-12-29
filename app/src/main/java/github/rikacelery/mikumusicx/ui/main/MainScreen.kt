@@ -67,13 +67,18 @@ fun MainScreen(shareVM: SharedViewModel, toSong: () -> Unit) {
 //                        .align(Alignment.BottomCenter)
 //                        .padding(8.dp)
                 ) {
-                    val scale by animateFloatAsState(vm.fft, tween(100, easing = FastOutSlowInEasing))
+                    val scale by animateFloatAsState(
+                        vm.fft,
+                        tween(100, easing = FastOutSlowInEasing)
+                    )
                     CurrentSongCard(
                         shareVM.musicControllerUiState.currentSong!!,
                         shareVM.musicControllerUiState.playerState == PlayerState.PLAYING,
                         Modifier.clickable(onClick = {
                             toSong()
                         }),
+                        progress = shareVM.musicControllerUiState.currentPosition.toFloat()
+                            .div(shareVM.musicControllerUiState.totalDuration.coerceAtLeast(1)),
                         albumScale = scale,
                         playOrToggleSong = {
                             when (shareVM.musicControllerUiState.playerState) {
@@ -132,7 +137,7 @@ fun MainScreen(shareVM: SharedViewModel, toSong: () -> Unit) {
                         }, onUpdateSongRequest = {
                             vm.updateSong(it.mediaId)
                         }, onAddPlayList = {
-                            scope.launch(){ vm.set() }
+                            scope.launch() { vm.set() }
                         })
                     }
 
@@ -151,8 +156,11 @@ fun MainScreen(shareVM: SharedViewModel, toSong: () -> Unit) {
 
                         val width = LocalConfiguration.current.screenWidthDp.dp
                         val state = rememberScrollState()
-                        Column(Modifier.verticalScroll(state),horizontalAlignment = Alignment.CenterHorizontally) {
-                            val scale by animateFloatAsState(vm.fft, tween(50))
+                        Column(
+                            Modifier.verticalScroll(state),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            val scale by animateFloatAsState(vm.fft, tween(100, easing = FastOutSlowInEasing))
                             Box(
                                 Modifier
                                     .scale(scale, 1f)
@@ -170,7 +178,7 @@ fun MainScreen(shareVM: SharedViewModel, toSong: () -> Unit) {
 ////                            .align(Alignment.BottomCenter)
 //                    )
                             Button({
-                                scope.launch(){ vm.set() }
+                                scope.launch() { vm.set() }
                             }) {
                                 Text("add playlist")
                             }
