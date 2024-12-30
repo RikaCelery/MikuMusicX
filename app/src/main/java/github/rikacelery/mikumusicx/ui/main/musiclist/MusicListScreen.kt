@@ -75,7 +75,7 @@ fun MusicListScreen(
     onAddSongRequest: (Song) -> Unit = {},
     onRemoveSongRequest: (Song) -> Unit = {},
     onUpdateSongRequest: (Song) -> Unit = {},
-    onAddPlayList:()-> Unit={},
+    onAddPlayList: () -> Unit = {},
     onClick: (Int) -> Unit = {},
 ) {
     Box(modifier = modifier) {
@@ -177,10 +177,9 @@ fun MusicListScreen(
                     }
                     AnimatedVisibility(
                         showDesc, Modifier
-                            .padding(10.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(v.desc)
+                        Text(v.desc.ifBlank { "暂无简介" }, Modifier.fillMaxWidth().padding(10.dp))
                         LaunchedEffect(Unit) {
                             if (v.desc.isBlank()) {
                                 kotlin.runCatching {
@@ -212,7 +211,8 @@ fun MusicListScreen(
                 }
             }
         }
-        FloatingActionButton(onAddPlayList,Modifier
+        FloatingActionButton(
+            onAddPlayList, Modifier
                 .padding(20.dp)
                 .align(Alignment.BottomEnd)
         ) {
