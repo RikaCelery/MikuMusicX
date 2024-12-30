@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MikuMusicX</string>
+    <string name="title_activity_debug">Debug</string>
 </resources>
