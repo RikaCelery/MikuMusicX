@@ -12,7 +12,7 @@ plugins {
 val versionMajor = 0
 val versionMinor = 3
 val versionPatch = 1
-val versionBuild = 0 // bump for dogfood builds, public betas, etc.
+val versionBuild = 1
 
 require(versionMinor < 100)
 require(versionPatch < 100)
@@ -46,7 +46,7 @@ android {
         targetSdk = 34
         versionCode =
             versionMajor * 1000000 + versionMinor * 10000 + versionPatch * 100 + versionBuild
-        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionName = "${versionMajor}.${versionMinor}.${versionPatch}.build-${versionBuild}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
